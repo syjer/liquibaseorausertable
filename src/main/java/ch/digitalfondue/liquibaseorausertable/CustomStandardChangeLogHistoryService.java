@@ -54,7 +54,7 @@ public class CustomStandardChangeLogHistoryService extends AbstractChangeLogHist
 
     @Override
     public int getPriority() {
-        return PRIORITY_DEFAULT;
+        return PRIORITY_DEFAULT+1;
     }
 
     @Override
