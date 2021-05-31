@@ -1,3 +1,7 @@
+/**
+ * Most of this code has been imported from the main liquibase project at: https://github.com/liquibase/liquibase
+ * the whole code is under the following license: https://github.com/liquibase/liquibase/blob/master/LICENSE.txt
+ */
 package ch.digitalfondue.liquibaseorausertable;
 
 import liquibase.*;
