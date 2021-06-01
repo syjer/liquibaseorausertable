@@ -427,15 +427,15 @@ public class CustomJdbcDatabaseSnapshot extends JdbcDatabaseSnapshot {
                     sql += ", DEFAULT_ON_NULL, IDENTITY_COLUMN, ic.GENERATION_TYPE ";
                 }
                 sql += "FROM USER_TAB_COLS c " +
-                        "JOIN USER_COL_COMMENTS cc USING ( OWNER, TABLE_NAME, COLUMN_NAME ) ";
+                        "JOIN USER_COL_COMMENTS cc USING ( TABLE_NAME, COLUMN_NAME ) ";
                 if (collectIdentityData) {
-                    sql += "LEFT JOIN USER_TAB_IDENTITY_COLS ic USING (OWNER, TABLE_NAME, COLUMN_NAME ) ";
+                    sql += "LEFT JOIN USER_TAB_IDENTITY_COLS ic USING (TABLE_NAME, COLUMN_NAME ) ";
                 }
-                if (!bulk || getAllCatalogsStringScratchData() == null) {
-                    sql += "WHERE OWNER='" + jdbcSchemaName + "' AND hidden_column='NO'";
-                } else {
-                    sql += "WHERE OWNER IN ('" + jdbcSchemaName + "', " + getAllCatalogsStringScratchData() + ") AND hidden_column='NO'";
-                }
+                //if (!bulk || getAllCatalogsStringScratchData() == null) {
+                    //sql += "WHERE hidden_column='NO'";
+                //} else {
+                    sql += "WHERE hidden_column='NO'";
+                //}
 
                 if (!bulk) {
                     if (tableName != null) {
