@@ -881,17 +881,17 @@ public class CustomJdbcDatabaseSnapshot extends JdbcDatabaseSnapshot {
 
                 String jdbcSchemaName = ((AbstractJdbcDatabase) database).getJdbcSchemaName(catalogAndSchema);
                 String jdbcTableName = database.escapeStringForDatabase(tableName);
-                String sqlToSelectNotNullConstraints = "SELECT  NULL AS TABLE_CAT, atc.OWNER AS TABLE_SCHEMA, atc.OWNER, atc.TABLE_NAME, " +
+                String sqlToSelectNotNullConstraints = "SELECT  NULL AS TABLE_CAT, atc.TABLE_NAME, " +
                         "atc.COLUMN_NAME, NULLABLE, ac.VALIDATED as VALIDATED, ac.SEARCH_CONDITION, ac.CONSTRAINT_NAME " +
                         "FROM user_TAB_COLS atc " +
-                        "JOIN user_cons_columns acc ON atc.OWNER = acc.OWNER AND atc.TABLE_NAME = acc.TABLE_NAME AND atc.COLUMN_NAME = acc.COLUMN_NAME " +
-                        "JOIN user_constraints ac ON atc.OWNER = ac.OWNER AND atc.TABLE_NAME = ac.TABLE_NAME AND acc.CONSTRAINT_NAME = ac.CONSTRAINT_NAME ";
+                        "JOIN user_cons_columns acc ON atc.TABLE_NAME = acc.TABLE_NAME AND atc.COLUMN_NAME = acc.COLUMN_NAME " +
+                        "JOIN user_constraints ac ON atc.TABLE_NAME = ac.TABLE_NAME AND acc.CONSTRAINT_NAME = ac.CONSTRAINT_NAME ";
 
                 if (!bulk || getAllCatalogsStringScratchData() == null) {
-                    sqlToSelectNotNullConstraints += " WHERE atc.OWNER='" + jdbcSchemaName + "' AND atc.hidden_column='NO' AND ac.CONSTRAINT_TYPE='C'  and ac.search_condition is not null ";
+                    sqlToSelectNotNullConstraints += " WHERE atc.hidden_column='NO' AND ac.CONSTRAINT_TYPE='C'  and ac.search_condition is not null ";
                 } else {
-                    sqlToSelectNotNullConstraints += " WHERE atc.OWNER IN ('" + jdbcSchemaName + "', " + getAllCatalogsStringScratchData() + ") "
-                            + " AND atc.hidden_column='NO' AND ac.CONSTRAINT_TYPE='C'  and ac.search_condition is not null ";
+                    sqlToSelectNotNullConstraints += " WHERE "
+                            + " atc.hidden_column='NO' AND ac.CONSTRAINT_TYPE='C'  and ac.search_condition is not null ";
                 }
 
                 sqlToSelectNotNullConstraints += (!bulk && tableName != null && !tableName.isEmpty()) ? " AND atc.TABLE_NAME='" + jdbcTableName + "'":"";
@@ -1037,22 +1037,22 @@ public class CustomJdbcDatabaseSnapshot extends JdbcDatabaseSnapshot {
                 }
 
                 private List<CachedRow> queryOracle(CatalogAndSchema catalogAndSchema, String tableName) throws DatabaseException, SQLException {
-                    String ownerName = database.correctObjectName(catalogAndSchema.getCatalogName(), Schema.class);
+                    //String ownerName = database.correctObjectName(catalogAndSchema.getCatalogName(), Schema.class);
 
-                    String sql = "SELECT null as TABLE_CAT, a.OWNER as TABLE_SCHEM, a.TABLE_NAME as TABLE_NAME, " +
+                    String sql = "SELECT null as TABLE_CAT, a.TABLE_NAME as TABLE_NAME, " +
                             "a.TEMPORARY as TEMPORARY, a.DURATION as DURATION, 'TABLE' as TABLE_TYPE, " +
                             "c.COMMENTS as REMARKS, A.tablespace_name as tablespace_name, CASE WHEN A.tablespace_name = " +
                             "(SELECT DEFAULT_TABLESPACE FROM USER_USERS) THEN 'true' ELSE null END as default_tablespace " +
                             "from USER_TABLES a " +
-                            "join USER_TAB_COMMENTS c on a.TABLE_NAME=c.table_name and a.owner=c.owner ";
-                    String allCatalogsString = getAllCatalogsStringScratchData();
-                    if (tableName != null || allCatalogsString == null) {
+                            "join USER_TAB_COMMENTS c on a.TABLE_NAME=c.table_name";
+                    /*String allCatalogsString = getAllCatalogsStringScratchData();
+                    f (tableName != null || allCatalogsString == null) {
                         sql += "WHERE a.OWNER='" + ownerName + "'";
                     } else {
                         sql += "WHERE a.OWNER IN ('" + ownerName + "', " + allCatalogsString + ")";
-                    }
+                    }*/
                     if (tableName != null) {
-                        sql += " AND a.TABLE_NAME='" + tableName + "'";
+                        sql += " where a.TABLE_NAME='" + tableName + "'";
                     }
 
                     return executeAndExtract(sql, database);
@@ -1154,21 +1154,23 @@ public class CustomJdbcDatabaseSnapshot extends JdbcDatabaseSnapshot {
                 private List<CachedRow> queryOracle(CatalogAndSchema catalogAndSchema, String viewName) throws DatabaseException, SQLException {
                     String ownerName = database.correctObjectName(catalogAndSchema.getCatalogName(), Schema.class);
 
-                    String sql = "SELECT null as TABLE_CAT, a.OWNER as TABLE_SCHEM, a.VIEW_NAME as TABLE_NAME, 'TABLE' as TABLE_TYPE, c.COMMENTS as REMARKS, TEXT as OBJECT_BODY" ;
+                    String sql = "SELECT null as TABLE_CAT, a.VIEW_NAME as TABLE_NAME, 'TABLE' as TABLE_TYPE, c.COMMENTS as REMARKS, TEXT as OBJECT_BODY" ;
                     if(database.getDatabaseMajorVersion() > 10){
                         sql +=  ", EDITIONING_VIEW";
                     }
                     sql += " from user_VIEWS a " +
-                            "join user_TAB_COMMENTS c on a.VIEW_NAME=c.table_name and a.owner=c.owner ";
-                    if (viewName != null || getAllCatalogsStringScratchData() == null) {
+                            "join user_TAB_COMMENTS c on a.VIEW_NAME=c.table_name  ";
+
+                    sql += " where ";
+                    /*if (viewName != null || getAllCatalogsStringScratchData() == null) {
                         sql += "WHERE a.OWNER='" + ownerName + "'";
                     } else {
                         sql += "WHERE a.OWNER IN ('" + ownerName + "', " + getAllCatalogsStringScratchData() + ")";
-                    }
+                    }*/
                     if (viewName != null) {
-                        sql += " AND a.VIEW_NAME='" + database.correctObjectName(viewName, View.class) + "'";
+                        sql += " a.VIEW_NAME='" + database.correctObjectName(viewName, View.class) + "' AND";
                     }
-                    sql += " AND a.VIEW_NAME not in (select mv.name from user_registered_mviews mv where mv.owner=a.owner)";
+                    sql += " a.VIEW_NAME not in (select mv.name from user_registered_mviews mv)";
 
                     return executeAndExtract(sql, database);
                 }
