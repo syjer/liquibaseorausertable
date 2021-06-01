@@ -1513,16 +1513,16 @@ public class CustomJdbcDatabaseSnapshot extends JdbcDatabaseSnapshot {
                     } else if (database instanceof OracleDatabase) {
                         warnAboutDbaRecycleBin();
 
-                        sql = "select uc.owner AS CONSTRAINT_SCHEM, uc.constraint_name, uc.table_name,uc.status,uc.deferrable,uc.deferred,ui.tablespace_name, ui.index_name, ui.owner as INDEX_CATALOG, uc.VALIDATED as VALIDATED, ac.COLUMN_NAME as COLUMN_NAME " +
+                        sql = "select uc.owner AS CONSTRAINT_SCHEM, uc.constraint_name, uc.table_name,uc.status,uc.deferrable,uc.deferred,ui.tablespace_name, ui.index_name, uc.VALIDATED as VALIDATED, ac.COLUMN_NAME as COLUMN_NAME " +
                                 "from user_constraints uc " +
-                                "join user_indexes ui on uc.index_name = ui.index_name and uc.owner=ui.table_owner and uc.table_name=ui.table_name " +
+                                "join user_indexes ui on uc.index_name = ui.index_name and uc.table_name=ui.table_name " +
                                 "LEFT OUTER JOIN " + (((OracleDatabase) database).canAccessDbaRecycleBin() ? "dba_recyclebin" : "user_recyclebin") + " d ON d.object_name=ui.table_name " +
-                                "LEFT JOIN user_cons_columns ac ON ac.OWNER = uc.OWNER AND ac.TABLE_NAME = uc.TABLE_NAME AND ac.CONSTRAINT_NAME = uc.CONSTRAINT_NAME "+
+                                "LEFT JOIN user_cons_columns ac ON ac.TABLE_NAME = uc.TABLE_NAME AND ac.CONSTRAINT_NAME = uc.CONSTRAINT_NAME "+
                                 "where uc.constraint_type='U' ";
                         if (tableName != null || getAllCatalogsStringScratchData() == null) {
-                            sql += "and uc.owner = '" + jdbcSchemaName + "'";
+                            //sql += "and uc.owner = '" + jdbcSchemaName + "'";
                         } else {
-                            sql += "and uc.owner IN ('" + jdbcSchemaName + "', " + getAllCatalogsStringScratchData() + ")";
+                            //sql += "and uc.owner IN ('" + jdbcSchemaName + "', " + getAllCatalogsStringScratchData() + ")";
                         }
                         sql += "AND d.object_name IS NULL ";
 
