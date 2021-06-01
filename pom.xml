@@ -12,7 +12,7 @@
 
   <groupId>ch.digitalfondue.liquibaseorausertable</groupId>
   <artifactId>liquibaseorausertable</artifactId>
-  <version>1.5-SNAPSHOT</version>
+  <version>1.5</version>
   <inceptionYear>2021</inceptionYear>
 
   <name>liquibaseorausertable</name>
