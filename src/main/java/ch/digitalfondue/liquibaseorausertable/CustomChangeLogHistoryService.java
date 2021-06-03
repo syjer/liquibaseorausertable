@@ -41,7 +41,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
-public class CustomStandardChangeLogHistoryService extends AbstractChangeLogHistoryService {
+public class CustomChangeLogHistoryService extends AbstractChangeLogHistoryService {
 
     private List<RanChangeSet> ranChangeSetList;
     private boolean serviceInitialized;
