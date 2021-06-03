@@ -1,13 +1,23 @@
-#liquibaseorausertable
+# liquibaseorausertable
 
 ##  Reason
 
-If you are using liquibase on a oracle db with _a lot_ of users and tables, you may have noticed that
-running the application, even without any changes is extremely slow.
+If you are using liquibase on an oracle db with _a lot_ of users and tables, you may have noticed that
+running the application, even without any changes is extremely slow at start time.
 
 This is due to the following issue: https://github.com/liquibase/liquibase/issues/1312 .
 
 This is a workaround project for handling this problem by avoiding the problematic calls in the normal code path.
+
+## Maven coordinates:
+
+```
+<dependency>
+  <groupId>ch.digitalfondue.liquibaseorausertable</groupId>
+  <artifactId>liquibaseorausertable</artifactId>
+  <version>1.8</version>
+</dependency>
+```
 
 ## Notes
 
@@ -17,13 +27,3 @@ My modifications/additions are also under Apache v2.0 license.
 
 This project has a custom LockService and ChangeLogHistoryService that are not doing any call on the oracle ALL_ tables.
 This mean that any "database snapshotting" functionality will still be slow.
-
-Maven coordinates:
-
-```
-<dependency>
-  <groupId>ch.digitalfondue.liquibaseorausertable</groupId>
-  <artifactId>liquibaseorausertable</artifactId>
-  <version>1.8</version>
-</dependency>
-```
