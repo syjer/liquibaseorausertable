@@ -25,7 +25,7 @@ import liquibase.exception.UnexpectedLiquibaseException;
 import liquibase.executor.Executor;
 import liquibase.executor.ExecutorService;
 import liquibase.snapshot.InvalidExampleException;
-import liquibase.snapshot.SnapshotControl;
+import liquibase.snapshot.SnapshotGeneratorFactory;
 import liquibase.sqlgenerator.SqlGeneratorFactory;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.*;
@@ -87,12 +87,7 @@ public class CustomStandardChangeLogHistoryService extends AbstractChangeLogHist
 
     public boolean hasDatabaseChangeLogTable() {
         if (hasDatabaseChangeLogTable == null) {
-            try {
-                hasDatabaseChangeLogTable = CustomSnapshotGeneratorFactory.getInstance().hasDatabaseChangeLogTable
-                    (getDatabase());
-            } catch (LiquibaseException e) {
-                throw new UnexpectedLiquibaseException(e);
-            }
+            hasDatabaseChangeLogTable = DBMetadata.hasDatabaseChangeLogTable(getDatabase());
         }
         return hasDatabaseChangeLogTable;
     }
@@ -113,8 +108,7 @@ public class CustomStandardChangeLogHistoryService extends AbstractChangeLogHist
 
         Table changeLogTable = null;
         try {
-            changeLogTable = CustomSnapshotGeneratorFactory.getInstance().getDatabaseChangeLogTable(new SnapshotControl
-                (database, false, Table.class, Column.class), database);
+            changeLogTable = DBMetadata.getDatabaseChangeLogTable(database);
         } catch (LiquibaseException e) {
             throw new UnexpectedLiquibaseException(e);
         }
@@ -486,8 +480,8 @@ public class CustomStandardChangeLogHistoryService extends AbstractChangeLogHist
             //
             DatabaseObject example =new Table().setName(database.getDatabaseChangeLogTableName
                 ()).setSchema(database.getLiquibaseCatalogName(), database.getLiquibaseSchemaName());
-            if (CustomSnapshotGeneratorFactory.getInstance().has(example, database)) {
-                DatabaseObject table = CustomSnapshotGeneratorFactory.getInstance().createSnapshot(example, database);
+            if (SnapshotGeneratorFactory.getInstance().has(example, database)) {
+                DatabaseObject table = SnapshotGeneratorFactory.getInstance().createSnapshot(example, database);
                 DiffOutputControl diffOutputControl = new DiffOutputControl(true, true, false, null);
                 Change[] change = ChangeGeneratorFactory.getInstance().fixUnexpected(table, diffOutputControl,database
                     , database);

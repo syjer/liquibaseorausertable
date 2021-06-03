@@ -24,6 +24,7 @@ import liquibase.executor.ExecutorService;
 import liquibase.lockservice.DatabaseChangeLogLock;
 import liquibase.lockservice.LockService;
 import liquibase.snapshot.InvalidExampleException;
+import liquibase.snapshot.SnapshotGeneratorFactory;
 import liquibase.sql.Sql;
 import liquibase.sqlgenerator.SqlGeneratorFactory;
 import liquibase.statement.SqlStatement;
@@ -195,14 +196,9 @@ public class CustomLockService implements LockService {
         return hasChangeLogLock;
     }
 
-    public boolean hasDatabaseChangeLogLockTable() throws DatabaseException {
+    public boolean hasDatabaseChangeLogLockTable() {
         if (hasDatabaseChangeLogLockTable == null) {
-            try {
-                hasDatabaseChangeLogLockTable = CustomSnapshotGeneratorFactory.getInstance()
-                        .hasDatabaseChangeLogLockTable(database);
-            } catch (LiquibaseException e) {
-                throw new UnexpectedLiquibaseException(e);
-            }
+            hasDatabaseChangeLogLockTable = DBMetadata.hasDatabaseChangeLogLockTable(database);
         }
         return hasDatabaseChangeLogLockTable;
     }
@@ -446,8 +442,8 @@ public class CustomLockService implements LockService {
             DatabaseObject example =
                     new Table().setName(database.getDatabaseChangeLogLockTableName())
                             .setSchema(database.getLiquibaseCatalogName(), database.getLiquibaseSchemaName());
-            if (CustomSnapshotGeneratorFactory.getInstance().has(example, database)) {
-                DatabaseObject table = CustomSnapshotGeneratorFactory.getInstance().createSnapshot(example, database);
+            if (SnapshotGeneratorFactory.getInstance().has(example, database)) {
+                DatabaseObject table = SnapshotGeneratorFactory.getInstance().createSnapshot(example, database);
                 DiffOutputControl diffOutputControl = new DiffOutputControl(true, true, false, null);
                 Change[] change = ChangeGeneratorFactory.getInstance().fixUnexpected(table, diffOutputControl, database, database);
                 SqlStatement[] sqlStatement = change[0].generateStatements(database);
