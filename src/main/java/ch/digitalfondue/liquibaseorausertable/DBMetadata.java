@@ -22,7 +22,15 @@ public class DBMetadata {
         String tableName = database.getDatabaseChangeLogTableName();
         Table table = new Table(database.getLiquibaseCatalogName(), database.getLiquibaseSchemaName(), tableName);
 
-        RawSqlStatement tableMetadataInfoStatement = new RawSqlStatement("SELECT * FROM USER_TAB_COLS WHERE upper(TABLE_NAME) = upper('" + tableName + "')");
+        RawSqlStatement tableMetadataInfoStatement = new RawSqlStatement("select TABLE_NAME, COLUMN_NAME, DATA_TYPE AS DATA_TYPE_NAME, DATA_TYPE_MOD, DATA_TYPE_OWNER," +
+                "                DECODE (data_type, 'CHAR', 1, 'VARCHAR2', 12, 'NUMBER', 3, 'LONG', -1, 'DATE', 93 , 'RAW', -3, 'LONG RAW', -4, 'BLOB', 2004, 'CLOB', 2005, 'BFILE', -13, 'FLOAT', 6, 'TIMESTAMP(6)', 93, 'TIMESTAMP(6) WITH TIME ZONE', -101, 'TIMESTAMP(6) WITH LOCAL TIME ZONE', -102, 'INTERVAL YEAR(2) TO MONTH', -103, 'INTERVAL DAY(2) TO SECOND(6)', -104, 'BINARY_FLOAT', 100, 'BINARY_DOUBLE', 101, 'XMLTYPE', 2009, 1111) AS data_type," +
+                "                DECODE( CHAR_USED, 'C',CHAR_LENGTH, DATA_LENGTH ) as DATA_LENGTH," +
+                "                DATA_PRECISION, DATA_SCALE, NULLABLE, COLUMN_ID as ORDINAL_POSITION, DEFAULT_LENGTH," +
+                "                DATA_DEFAULT," +
+                "                NUM_BUCKETS, CHARACTER_SET_NAME, " +
+                "                CHAR_COL_DECL_LENGTH, CHAR_LENGTH, " +
+                "                CHAR_USED, VIRTUAL_COLUMN " +
+                "                FROM USER_TAB_COLS WHERE upper(TABLE_NAME) = upper('" + tableName + "')");
         Scope.getCurrentScope().getSingleton(ExecutorService.class)
                 .getExecutor("jdbc", database)
                 .queryForList(tableMetadataInfoStatement).forEach(kv -> {
@@ -49,7 +57,7 @@ public class DBMetadata {
         return (Integer) o;
     }
 
-    // imported from ColumnSnapshotGenerator
+    // imported from ColumnSnapshotGenerator / ColumnSnapshotGeneratorOracle
     private static DataType extractType(Map<String, ?> columnMetadataResultSet) {
         String dataType = getStringFromMetadata(columnMetadataResultSet, "DATA_TYPE_NAME");
         dataType = dataType.replace("VARCHAR2", "VARCHAR");
@@ -57,42 +65,33 @@ public class DBMetadata {
 
         DataType type = new DataType(dataType);
         type.setDataTypeId(getIntegerFromMetadata(columnMetadataResultSet, "DATA_TYPE"));
-        if (dataType.equalsIgnoreCase("NUMBER")) {
+        if ("NUMBER".equalsIgnoreCase(dataType)) {
             type.setColumnSize(getIntegerFromMetadata(columnMetadataResultSet, "DATA_PRECISION"));
-//                if (type.getColumnSize() == null) {
-//                    type.setColumnSize(38);
-//                }
             type.setDecimalDigits(getIntegerFromMetadata(columnMetadataResultSet, "DATA_SCALE"));
-//                if (type.getDecimalDigits() == null) {
-//                    type.setDecimalDigits(0);
-//                }
-//            type.setRadix(10);
+
         } else {
-            if ("FLOAT".equalsIgnoreCase(dataType)) { //FLOAT [(precision)]
-                type.setColumnSize(getIntegerFromMetadata(columnMetadataResultSet, "DATA_PRECISION"));
-            } else {
-                type.setColumnSize(getIntegerFromMetadata(columnMetadataResultSet, "DATA_LENGTH"));
-            }
+            type.setColumnSize(getIntegerFromMetadata(columnMetadataResultSet, "DATA_LENGTH"));
 
-            boolean isTimeStampDataType = dataType.toUpperCase().contains("TIMESTAMP");
-
-            if (isTimeStampDataType || dataType.equalsIgnoreCase("NCLOB") || dataType.equalsIgnoreCase("BLOB") || dataType.equalsIgnoreCase("CLOB")) {
+            if ("NCLOB".equalsIgnoreCase(dataType) || "BLOB".equalsIgnoreCase(dataType) || "CLOB".equalsIgnoreCase
+                    (dataType)) {
                 type.setColumnSize(null);
-            } else if (dataType.equalsIgnoreCase("NVARCHAR") || dataType.equalsIgnoreCase("NCHAR")) {
+            } else if ("NVARCHAR".equalsIgnoreCase(dataType) || "NCHAR".equalsIgnoreCase(dataType)) {
                 type.setColumnSize(getIntegerFromMetadata(columnMetadataResultSet, "CHAR_LENGTH"));
                 type.setColumnSizeUnit(DataType.ColumnSizeUnit.CHAR);
             } else {
-                String charUsed = getStringFromMetadata(columnMetadataResultSet, "CHAR_USED");
+                String charUsed = getStringFromMetadata(columnMetadataResultSet,"CHAR_USED");
                 DataType.ColumnSizeUnit unit = null;
                 if ("C".equals(charUsed)) {
                     unit = DataType.ColumnSizeUnit.CHAR;
-                    type.setColumnSize(getIntegerFromMetadata(columnMetadataResultSet,"CHAR_LENGTH"));
+                    type.setColumnSize(getIntegerFromMetadata(columnMetadataResultSet, "CHAR_LENGTH"));
                 } else if ("B".equals(charUsed)) {
                     unit = DataType.ColumnSizeUnit.BYTE;
                 }
                 type.setColumnSizeUnit(unit);
             }
         }
+
+
         return type;
     }
     //
