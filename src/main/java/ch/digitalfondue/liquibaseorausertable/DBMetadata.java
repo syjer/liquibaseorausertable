@@ -105,8 +105,13 @@ public class DBMetadata {
     }
 
     private static boolean hasTableNamed(String tableName, Database database) {
+        String query = "SELECT CASE WHEN EXISTS (SELECT * FROM user_tables WHERE upper(table_name) = upper('" + tableName + "')) THEN 1 ELSE 0 END FROM dual";
+        boolean useAllTableQuery = OraUserTableConfiguration.HAS_TABLE_NAMED_QUERY_IN_ALL_TABLES.getCurrentValue();
+        if (useAllTableQuery) {
+            query = "SELECT CASE WHEN EXISTS (SELECT * FROM all_tables WHERE owner = '" + database.getDefaultSchemaName() + "' AND upper(table_name) = upper('" + tableName + "')) THEN 1 ELSE 0 END FROM dual";
+        }
         try {
-            RawSqlStatement tableExistsStatement = new RawSqlStatement("SELECT CASE WHEN EXISTS (SELECT * FROM user_tables WHERE upper(table_name) = upper('" + tableName + "')) THEN 1 ELSE 0 END FROM dual");
+            RawSqlStatement tableExistsStatement = new RawSqlStatement(query);
             int res = Scope.getCurrentScope().getSingleton(ExecutorService.class)
                     .getExecutor("jdbc", database)
                     .queryForInt(tableExistsStatement);
