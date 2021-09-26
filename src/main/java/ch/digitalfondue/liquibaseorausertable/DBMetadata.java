@@ -11,18 +11,15 @@ import liquibase.structure.core.Table;
 
 import java.util.Map;
 
-
 public class DBMetadata {
 
     public static Table getDatabaseChangeLogTable(Database database) throws DatabaseException {
         if (!hasDatabaseChangeLogTable(database)) {
             return null;
         }
-
         String tableName = database.getDatabaseChangeLogTableName();
         Table table = new Table(database.getLiquibaseCatalogName(), database.getLiquibaseSchemaName(), tableName);
-
-        RawSqlStatement tableMetadataInfoStatement = new RawSqlStatement("select TABLE_NAME, COLUMN_NAME, DATA_TYPE AS DATA_TYPE_NAME, DATA_TYPE_MOD, DATA_TYPE_OWNER," +
+        RawSqlStatement tableMetadataInfoStatement = new RawSqlStatement("select /* metadata_query */ TABLE_NAME, COLUMN_NAME, DATA_TYPE AS DATA_TYPE_NAME, DATA_TYPE_MOD, DATA_TYPE_OWNER," +
                 "                DECODE (data_type, 'CHAR', 1, 'VARCHAR2', 12, 'NUMBER', 3, 'LONG', -1, 'DATE', 93 , 'RAW', -3, 'LONG RAW', -4, 'BLOB', 2004, 'CLOB', 2005, 'BFILE', -13, 'FLOAT', 6, 'TIMESTAMP(6)', 93, 'TIMESTAMP(6) WITH TIME ZONE', -101, 'TIMESTAMP(6) WITH LOCAL TIME ZONE', -102, 'INTERVAL YEAR(2) TO MONTH', -103, 'INTERVAL DAY(2) TO SECOND(6)', -104, 'BINARY_FLOAT', 100, 'BINARY_DOUBLE', 101, 'XMLTYPE', 2009, 1111) AS data_type," +
                 "                DECODE( CHAR_USED, 'C',CHAR_LENGTH, DATA_LENGTH ) as DATA_LENGTH," +
                 "                DATA_PRECISION, DATA_SCALE, NULLABLE, COLUMN_ID as ORDINAL_POSITION, DEFAULT_LENGTH," +
@@ -38,7 +35,7 @@ public class DBMetadata {
                     c.setName((String) kv.get("COLUMN_NAME"));
                     c.setType(extractType(kv));
                     table.addColumn(c);
-        });
+                });
         //
         return table;
     }
@@ -79,7 +76,7 @@ public class DBMetadata {
                 type.setColumnSize(getIntegerFromMetadata(columnMetadataResultSet, "CHAR_LENGTH"));
                 type.setColumnSizeUnit(DataType.ColumnSizeUnit.CHAR);
             } else {
-                String charUsed = getStringFromMetadata(columnMetadataResultSet,"CHAR_USED");
+                String charUsed = getStringFromMetadata(columnMetadataResultSet, "CHAR_USED");
                 DataType.ColumnSizeUnit unit = null;
                 if ("C".equals(charUsed)) {
                     unit = DataType.ColumnSizeUnit.CHAR;
@@ -90,8 +87,6 @@ public class DBMetadata {
                 type.setColumnSizeUnit(unit);
             }
         }
-
-
         return type;
     }
     //
@@ -105,8 +100,13 @@ public class DBMetadata {
     }
 
     private static boolean hasTableNamed(String tableName, Database database) {
+        String query = "SELECT /* table_named_query_user */ CASE WHEN EXISTS (SELECT * FROM user_tables WHERE upper(table_name) = upper('" + tableName + "')) THEN 1 ELSE 0 END FROM dual";
+        boolean useAllTableQuery = OraUserTableConfiguration.HAS_TABLE_NAMED_QUERY_IN_ALL_TABLES.getCurrentValue();
+        if (useAllTableQuery) {
+            query = "SELECT /* table_named_query_all */ CASE WHEN EXISTS (SELECT * FROM all_tables WHERE owner = '" + database.getDefaultSchemaName() + "' AND upper(table_name) = upper('" + tableName + "')) THEN 1 ELSE 0 END FROM dual";
+        }
         try {
-            RawSqlStatement tableExistsStatement = new RawSqlStatement("SELECT CASE WHEN EXISTS (SELECT * FROM user_tables WHERE upper(table_name) = upper('" + tableName + "')) THEN 1 ELSE 0 END FROM dual");
+            RawSqlStatement tableExistsStatement = new RawSqlStatement(query);
             int res = Scope.getCurrentScope().getSingleton(ExecutorService.class)
                     .getExecutor("jdbc", database)
                     .queryForInt(tableExistsStatement);
