@@ -75,6 +75,13 @@
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
       <version>5.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>p6spy</groupId>
+      <artifactId>p6spy</artifactId>
+      <version>3.9.1</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
