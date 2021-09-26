@@ -27,3 +27,7 @@ My modifications/additions are also under Apache v2.0 license.
 
 This project has a custom LockService and ChangeLogHistoryService that are not doing any call on the oracle ALL_ tables.
 This mean that any "database snapshotting" functionality will still be slow.
+
+To run test, you need an oracle service:
+
+> docker run --rm --name oracle-xe-slim -p 1521:1521 -e ORACLE_RANDOM_PASSWORD=true -e APP_USER=test -e APP_USER_PASSWORD=test gvenzl/oracle-xe:11-slim
