@@ -10,6 +10,7 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.FileSystemResourceAccessor;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
@@ -29,6 +30,23 @@ public class TestMigration {
         Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(ds.getConnection()));
         Liquibase liquibase = new Liquibase("db-changelog.xml", new FileSystemResourceAccessor(new File("./src/test/migration/")), database);
         liquibase.update((String) null);
+        Assertions.assertFalse(OraUserTableConfiguration.HAS_TABLE_NAMED_QUERY_IN_ALL_TABLES.getCurrentValue());
+    }
+
+    @Test
+    public void testSwitchAllTables() throws LiquibaseException, SQLException {
+        try {
+            System.setProperty("orausertable.hasTableNamedQueryInAll", "true");
+            DataSource ds = getDataSource();
+            Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(ds.getConnection()));
+            Liquibase liquibase = new Liquibase("db-changelog.xml", new FileSystemResourceAccessor(new File("./src/test/migration/")), database);
+            liquibase.update((String) null);
+            Assertions.assertTrue(OraUserTableConfiguration.HAS_TABLE_NAMED_QUERY_IN_ALL_TABLES.getCurrentValue());
+        } finally {
+            System.clearProperty("orausertable.hasTableNamedQueryInAll");
+        }
+
+
     }
 
     private static DataSource getDataSource() {
