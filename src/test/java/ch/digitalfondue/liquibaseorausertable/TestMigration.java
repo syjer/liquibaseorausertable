@@ -3,6 +3,8 @@ package ch.digitalfondue.liquibaseorausertable;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import liquibase.Liquibase;
+import liquibase.Scope;
+import liquibase.configuration.LiquibaseConfiguration;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -15,6 +17,11 @@ import java.io.File;
 import java.sql.SQLException;
 
 public class TestMigration {
+
+    // https://github.com/testcontainers/testcontainers-java/issues/2313 see
+    static {
+        System.setProperty("oracle.jdbc.timezoneAsRegion", "false");
+    }
 
     @Test
     public void testSimple() throws LiquibaseException, SQLException {
