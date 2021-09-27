@@ -1,5 +1,8 @@
 # liquibaseorausertable
 
+[![build](https://github.com/syjer/liquibaseorausertable/actions/workflows/maven.yml/badge.svg)](https://github.com/syjer/liquibaseorausertable/actions/workflows/maven.yml) 
+![Maven Central](https://img.shields.io/maven-central/v/ch.digitalfondue.liquibaseorausertable/liquibaseorausertable)
+
 ##  Reason
 
 If you are using liquibase on an oracle db with _a lot_ of users and tables, you may have noticed that
