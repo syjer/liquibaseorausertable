@@ -15,7 +15,7 @@ This is a workaround project for handling this problem by avoiding the problemat
 <dependency>
   <groupId>ch.digitalfondue.liquibaseorausertable</groupId>
   <artifactId>liquibaseorausertable</artifactId>
-  <version>1.8</version>
+  <version>1.9</version>
 </dependency>
 ```
 
