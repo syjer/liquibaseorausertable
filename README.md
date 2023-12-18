@@ -14,6 +14,19 @@ This is a workaround project for handling this problem by avoiding the problemat
 
 ## Maven coordinates:
 
+If you are using liquibase version 4.23.0+ (see issue https://github.com/syjer/liquibaseorausertable/issues/4 , thanks @PascalSchumacher for the PR)
+
+```
+<dependency>
+  <groupId>ch.digitalfondue.liquibaseorausertable</groupId>
+  <artifactId>liquibaseorausertable</artifactId>
+  <version>2.0.0</version>
+</dependency>
+```
+
+If you are using an older version of liquibase:
+
+
 ```
 <dependency>
   <groupId>ch.digitalfondue.liquibaseorausertable</groupId>
